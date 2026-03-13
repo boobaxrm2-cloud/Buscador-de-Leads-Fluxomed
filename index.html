@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>GERADOR DE LEADS FLUXOMED</title>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap">
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
+<style>
+
+body{
+font-family:'Inter';
+background:#0f172a;
+color:white;
+display:flex;
+height:100vh;
+margin:0;
+}
+
+.sidebar{
+
+width:300px;
+background:#020617;
+padding:30px;
+}
+
+input,select,button{
+
+width:100%;
+padding:10px;
+margin-bottom:15px;
+border-radius:6px;
+border:none;
+
+}
+
+button{
+
+background:#2563eb;
+color:white;
+font-weight:bold;
+cursor:pointer;
+
+}
+
+.main{
+
+flex:1;
+padding:40px;
+overflow:auto;
+
+}
+
+table{
+
+width:100%;
+border-collapse:collapse;
+
+}
+
+th,td{
+
+padding:12px;
+border-bottom:1px solid #1e293b;
+
+}
+
+.loading{
+
+display:none;
+text-align:center;
+
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="sidebar">
+
+<h2>GERADOR DE LEADS</h2>
+
+<input id="segmento" placeholder="Segmento (ex: transportadora)">
+<input id="cidade" placeholder="Cidade">
+
+<button onclick="buscar()">Buscar Empresas</button>
+
+</div>
+
+<div class="main">
+
+<div class="loading" id="loading">
+<h3>Buscando empresas...</h3>
+</div>
+
+<table id="tabela">
+
+<thead>
+<tr>
+<th>Empresa</th>
+<th>Email</th>
+<th>Telefone</th>
+<th>Site</th>
+</tr>
+</thead>
+
+<tbody></tbody>
+
+</table>
+
+<button onclick="exportar()">Baixar Excel</button>
+
+</div>
+
+<script>
+
+let leads=[]
+
+async function buscar(){
+
+document.getElementById("loading").style.display="block"
+
+let segmento=document.getElementById("segmento").value
+let cidade=document.getElementById("cidade").value
+
+let res=await fetch("/buscar",{
+
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({segmento,cidade})
+
+})
+
+leads=await res.json()
+
+mostrar()
+
+document.getElementById("loading").style.display="none"
+
+}
+
+function mostrar(){
+
+let tbody=document.querySelector("#tabela tbody")
+
+tbody.innerHTML=""
+
+leads.forEach(l=>{
+
+tbody.innerHTML+=`
+
+<tr>
+<td>${l.nome}</td>
+<td>${l.email}</td>
+<td>${l.telefone}</td>
+<td>${l.site}</td>
+</tr>
+
+`
+
+})
+
+}
+
+function exportar(){
+
+let ws=XLSX.utils.json_to_sheet(leads)
+
+let wb=XLSX.utils.book_new()
+
+XLSX.utils.book_append_sheet(wb,ws,"Leads")
+
+XLSX.writeFile(wb,"leads_fluxomed.xlsx")
+
+}
+
+</script>
+
+</body>
+</html>
