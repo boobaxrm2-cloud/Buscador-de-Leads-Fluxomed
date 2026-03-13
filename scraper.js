@@ -1,46 +1,50 @@
-const puppeteer=require("puppeteer")
+const puppeteer = require("puppeteer");
 
-async function buscar(segmento,cidade){
+async function buscar(segmento, cidade){
 
-const browser=await puppeteer.launch()
+const browser = await puppeteer.launch({
+headless:false
+});
 
-const page=await browser.newPage()
+const page = await browser.newPage();
 
-await page.goto("https://www.google.com/search?q="+segmento+" "+cidade)
+const busca = `${segmento} ${cidade}`;
 
-await page.waitForTimeout(5000)
+await page.goto(`https://www.google.com/search?q=${encodeURIComponent(busca)}`, {
+waitUntil:"domcontentloaded"
+});
 
-let dados=await page.evaluate(()=>{
+await page.waitForTimeout(4000);
 
-let empresas=[]
+const dados = await page.evaluate(()=>{
+
+let empresas = [];
 
 document.querySelectorAll("h3").forEach(el=>{
 
-let nome=el.innerText
+let nome = el.innerText;
 
-if(nome.length<80){
+if(nome.length > 3 && nome.length < 80){
 
 empresas.push({
-
-nome:nome,
-email:"",
-telefone:"",
-site:""
-
-})
+nome: nome,
+email: "",
+telefone: "",
+site: ""
+});
 
 }
 
-})
+});
 
-return empresas
+return empresas.slice(0,20);
 
-})
+});
 
-await browser.close()
+await browser.close();
 
-return dados
+return dados;
 
 }
 
-module.exports={buscar}
+module.exports = { buscar };
