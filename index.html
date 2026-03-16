@@ -1,179 +1,218 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<title>GERADOR DE LEADS FLUXOMED</title>
 
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap">
+<meta charset="UTF-8">
+<title>Dashboard Inteligente de Planilhas</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 
 body{
-font-family:'Inter';
 background:#0f172a;
 color:white;
-display:flex;
-height:100vh;
-margin:0;
+font-family:Arial;
 }
 
 .sidebar{
-
+background:#1e293b;
+height:100vh;
+padding:20px;
+position:fixed;
 width:300px;
-background:#020617;
+}
+
+.dashboard{
+margin-left:320px;
 padding:30px;
 }
 
-input,select,button{
-
-width:100%;
-padding:10px;
-margin-bottom:15px;
-border-radius:6px;
+.card{
+background:#1e293b;
 border:none;
-
+border-radius:12px;
+margin-bottom:25px;
 }
 
-button{
-
-background:#2563eb;
-color:white;
-font-weight:bold;
-cursor:pointer;
-
+.chart-container{
+height:350px;
 }
 
-.main{
-
-flex:1;
-padding:40px;
-overflow:auto;
-
-}
-
-table{
-
-width:100%;
-border-collapse:collapse;
-
-}
-
-th,td{
-
-padding:12px;
-border-bottom:1px solid #1e293b;
-
-}
-
-.loading{
-
-display:none;
-text-align:center;
-
+select,input{
+margin-bottom:10px;
 }
 
 </style>
+
 </head>
 
 <body>
 
 <div class="sidebar">
 
-<h2>GERADOR DE LEADS</h2>
+<h4>📊 Gerador de Dashboard</h4>
 
-<input id="segmento" placeholder="Segmento (ex: transportadora)">
-<input id="cidade" placeholder="Cidade">
+<hr>
 
-<button onclick="buscar()">Buscar Empresas</button>
+<label>Upload da planilha</label>
+<input type="file" id="upload" class="form-control">
+
+<hr>
+
+<label>Coluna</label>
+<select id="coluna" class="form-select"></select>
+
+<label>Tipo de gráfico</label>
+<select id="tipoGrafico" class="form-select">
+
+<option value="bar">Barras</option>
+<option value="pie">Pizza</option>
+<option value="line">Linha</option>
+<option value="doughnut">Donut</option>
+<option value="radar">Radar</option>
+
+</select>
+
+<button class="btn btn-primary w-100 mt-2" onclick="adicionarGrafico()">
+Adicionar gráfico
+</button>
+
+<button class="btn btn-danger w-100 mt-2" onclick="limparDashboard()">
+Limpar dashboard
+</button>
 
 </div>
 
-<div class="main">
+<div class="dashboard">
 
-<div class="loading" id="loading">
-<h3>Buscando empresas...</h3>
-</div>
+<h2>Dashboard</h2>
 
-<table id="tabela">
-
-<thead>
-<tr>
-<th>Empresa</th>
-<th>Email</th>
-<th>Telefone</th>
-<th>Site</th>
-</tr>
-</thead>
-
-<tbody></tbody>
-
-</table>
-
-<button onclick="exportar()">Baixar Excel</button>
+<div class="row" id="dashboard"></div>
 
 </div>
 
 <script>
 
-let leads=[]
+let dadosPlanilha = [];
+let graficos = [];
+let contador = 0;
 
-async function buscar(){
+document.getElementById("upload").addEventListener("change", carregarArquivo);
 
-document.getElementById("loading").style.display="block"
+function carregarArquivo(e){
 
-let segmento=document.getElementById("segmento").value
-let cidade=document.getElementById("cidade").value
+const file = e.target.files[0];
+const reader = new FileReader();
 
-let res=await fetch("/buscar",{
+reader.onload = function(evt){
 
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({segmento,cidade})
+const data = new Uint8Array(evt.target.result);
+const workbook = XLSX.read(data,{type:'array'});
 
-})
+const sheet = workbook.Sheets[workbook.SheetNames[0]];
 
-leads=await res.json()
+dadosPlanilha = XLSX.utils.sheet_to_json(sheet);
 
-mostrar()
+preencherColunas();
 
-document.getElementById("loading").style.display="none"
+};
 
-}
-
-function mostrar(){
-
-let tbody=document.querySelector("#tabela tbody")
-
-tbody.innerHTML=""
-
-leads.forEach(l=>{
-
-tbody.innerHTML+=`
-
-<tr>
-<td>${l.nome}</td>
-<td>${l.email}</td>
-<td>${l.telefone}</td>
-<td>${l.site}</td>
-</tr>
-
-`
-
-})
+reader.readAsArrayBuffer(file);
 
 }
 
-function exportar(){
+function preencherColunas(){
 
-let ws=XLSX.utils.json_to_sheet(leads)
+const colunas = Object.keys(dadosPlanilha[0]);
 
-let wb=XLSX.utils.book_new()
+const select = document.getElementById("coluna");
 
-XLSX.utils.book_append_sheet(wb,ws,"Leads")
+select.innerHTML="";
 
-XLSX.writeFile(wb,"leads_fluxomed.xlsx")
+colunas.forEach(c=>{
+
+let option = document.createElement("option");
+option.value=c;
+option.text=c;
+
+select.appendChild(option);
+
+});
+
+}
+
+function adicionarGrafico(){
+
+const coluna = document.getElementById("coluna").value;
+const tipo = document.getElementById("tipoGrafico").value;
+
+let contagem = {};
+
+dadosPlanilha.forEach(d=>{
+
+let valor = d[coluna];
+
+if(!contagem[valor]) contagem[valor]=0;
+
+contagem[valor]++;
+
+});
+
+const labels = Object.keys(contagem);
+const valores = Object.values(contagem);
+
+contador++;
+
+const id = "grafico"+contador;
+
+const html = `
+<div class="col-md-6">
+<div class="card p-3">
+
+<h5>${coluna}</h5>
+
+<div class="chart-container">
+<canvas id="${id}"></canvas>
+</div>
+
+</div>
+</div>
+`;
+
+document.getElementById("dashboard").innerHTML += html;
+
+const ctx = document.getElementById(id);
+
+const grafico = new Chart(ctx,{
+type:tipo,
+data:{
+labels:labels,
+datasets:[{
+label:coluna,
+data:valores
+}]
+},
+options:{
+responsive:true,
+maintainAspectRatio:false
+}
+});
+
+graficos.push(grafico);
+
+}
+
+function limparDashboard(){
+
+document.getElementById("dashboard").innerHTML="";
+
+graficos.forEach(g=>g.destroy());
+
+graficos=[];
 
 }
 
