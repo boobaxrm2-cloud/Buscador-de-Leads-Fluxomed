@@ -1,78 +1,94 @@
 <!DOCTYPE html>
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-    input, textarea {
-      width: 100%;
-      padding: 10px;
-      margin: 5px 0;
-    }
-  </style>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LinguaPro</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
+<body class="bg-gray-100 font-sans">
 
-<header>
-  <h1>Plataforma de Idiomas</h1>
-</header>
+<!-- Sidebar -->
+<div class="flex h-screen">
+  <aside class="w-64 bg-white shadow-lg p-5">
+    <h1 class="text-2xl font-bold mb-10 text-blue-600">LinguaPro</h1>
+    <nav class="space-y-4">
+      <button onclick="showSection('agenda')" class="block w-full text-left p-2 rounded hover:bg-blue-100">📅 Agenda</button>
+      <button onclick="showSection('materiais')" class="block w-full text-left p-2 rounded hover:bg-blue-100">📂 Materiais</button>
+      <button onclick="showSection('forum')" class="block w-full text-left p-2 rounded hover:bg-blue-100">💬 Fórum</button>
+    </nav>
+  </aside>
 
-<nav>
-  <button onclick="showSection('agenda')">Agenda</button>
-  <button onclick="showSection('materiais')">Materiais</button>
-  <button onclick="showSection('forum')">Fórum</button>
-</nav>
+  <!-- Main Content -->
+  <main class="flex-1 p-8 overflow-y-auto">
 
-<div id="agenda" class="section active">
-  <h2>Agenda de Aulas</h2>
-  <div class="card">📅 Aula de Inglês - 22/04 às 19h</div>
-  <div class="card">📅 Aula de Espanhol - 24/04 às 18h</div>
-</div>
+    <!-- Agenda -->
+    <section id="agenda" class="section">
+      <h2 class="text-3xl font-bold mb-6">Agenda de Aulas</h2>
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="bg-white p-5 rounded-2xl shadow">
+          <h3 class="font-semibold">Inglês</h3>
+          <p>22/04 - 19h</p>
+        </div>
+        <div class="bg-white p-5 rounded-2xl shadow">
+          <h3 class="font-semibold">Espanhol</h3>
+          <p>24/04 - 18h</p>
+        </div>
+      </div>
+    </section>
 
-<div id="materiais" class="section">
-  <h2>Materiais para Download</h2>
-  <div class="card">
-    📄 Aula 1 - PDF
-    <button onclick="downloadFile('Aula 1')">Download</button>
-  </div>
-  <div class="card">
-    📄 Aula 2 - PDF
-    <button onclick="downloadFile('Aula 2')">Download</button>
-  </div>
-</div>
+    <!-- Materiais -->
+    <section id="materiais" class="section hidden">
+      <h2 class="text-3xl font-bold mb-6">Materiais</h2>
+      <div class="space-y-4">
+        <div class="bg-white p-5 rounded-2xl shadow flex justify-between">
+          <span>Aula 1 - PDF</span>
+          <button onclick="downloadFile('Aula 1')" class="bg-blue-500 text-white px-4 py-2 rounded">Download</button>
+        </div>
+        <div class="bg-white p-5 rounded-2xl shadow flex justify-between">
+          <span>Aula 2 - PDF</span>
+          <button onclick="downloadFile('Aula 2')" class="bg-blue-500 text-white px-4 py-2 rounded">Download</button>
+        </div>
+      </div>
+    </section>
 
-<div id="forum" class="section">
-  <h2>Fórum de Ajuda</h2>
-  <input id="postTitle" placeholder="Título da dúvida">
-  <textarea id="postContent" placeholder="Descreva sua dúvida"></textarea>
-  <button onclick="addPost()">Publicar</button>
+    <!-- Fórum -->
+    <section id="forum" class="section hidden">
+      <h2 class="text-3xl font-bold mb-6">Fórum</h2>
 
-  <div id="posts"></div>
+      <div class="bg-white p-5 rounded-2xl shadow mb-6">
+        <input id="postTitle" placeholder="Título" class="w-full p-3 border rounded mb-2" />
+        <textarea id="postContent" placeholder="Sua dúvida..." class="w-full p-3 border rounded mb-2"></textarea>
+        <button onclick="addPost()" class="bg-blue-600 text-white px-4 py-2 rounded">Publicar</button>
+      </div>
+
+      <div id="posts" class="space-y-4"></div>
+    </section>
+
+  </main>
 </div>
 
 <script>
-function showSection(sectionId) {
-  document.querySelectorAll('.section').forEach(sec => {
-    sec.classList.remove('active');
-  });
-  document.getElementById(sectionId).classList.add('active');
+function showSection(id) {
+  document.querySelectorAll('.section').forEach(sec => sec.classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
 }
 
-function downloadFile(fileName) {
-  alert('Baixando ' + fileName);
+function downloadFile(name) {
+  alert('Baixando ' + name);
 }
 
 function addPost() {
   const title = document.getElementById('postTitle').value;
   const content = document.getElementById('postContent').value;
 
-  if (!title || !content) {
-    alert('Preencha todos os campos');
-    return;
-  }
+  if (!title || !content) return alert('Preencha tudo');
 
-  const postDiv = document.createElement('div');
-  postDiv.className = 'card';
-  postDiv.innerHTML = `<strong>${title}</strong><p>${content}</p>`;
+  const post = document.createElement('div');
+  post.className = 'bg-white p-5 rounded-2xl shadow';
+  post.innerHTML = `<h3 class='font-bold'>${title}</h3><p>${content}</p>`;
 
-  document.getElementById('posts').prepend(postDiv);
+  document.getElementById('posts').prepend(post);
 
   document.getElementById('postTitle').value = '';
   document.getElementById('postContent').value = '';
@@ -81,3 +97,4 @@ function addPost() {
 
 </body>
 </html>
+
